@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Arka Plan Rengi -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#F48FB1"/> <!-- Açık pembe arka plan rengi -->
+        </shape>
+    </item>
+
+    <!-- İç Daire -->
+    <item
+        android:top="30dp"
+        android:left="30dp">
+        <shape android:shape="oval">
+            <solid android:color="#D81B60"/> <!-- Daha koyu pembe renk -->
+            <size android:width="80dp" android:height="80dp"/> <!-- Dairenin boyutu -->
+        </shape>
+    </item>
+
+    <!-- İçerik -->
+    <item
+        android:top="50dp"
+        android:left="50dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF"/> <!-- Beyaz renk iç daire -->
+            <size android:width="60dp" android:height="60dp"/> <!-- İç dairenin boyutu -->
+        </shape>
+    </item>
+</layer-list>
