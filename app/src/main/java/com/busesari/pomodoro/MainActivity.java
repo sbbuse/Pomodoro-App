@@ -1,14 +1,17 @@
 package com.busesari.pomodoro;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -33,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int LONG_BREAK_TIME = 15 * 60;
 
     private TimerService timerService;
+    private NotificationManager notificationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +44,10 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
+        createNotificationChannel();
+
         timerService = new TimerService(this);
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         startButton = findViewById(R.id.startButton);
         stopButton = findViewById(R.id.stopButton);
@@ -86,6 +93,9 @@ public class MainActivity extends AppCompatActivity {
                 if (timeLeft > 0) {
                     timeLeft--;
                     updateTimerText();
+                    int minutes = timeLeft / 60;
+                    int secs = timeLeft % 60;
+                    updateNotification(minutes, secs);
                     handler.postDelayed(this, 1000);
                 } else {
                     // Check if it's a focus timer
@@ -94,12 +104,12 @@ public class MainActivity extends AppCompatActivity {
                         sessionText.setText("Sessions: " + sessionCount);
                     }
                     isRunning = false;
+                    notificationManager.cancel(1); // Timer bittiğinde bildirimi kapat
                 }
             }
         };
         handler.post(runnable);
     }
-
 
     private void startBreakTimer(int breakDuration) {
         stopTimer(); // Stop any existing timers
@@ -111,9 +121,13 @@ public class MainActivity extends AppCompatActivity {
                 if (timeLeft > 0) {
                     timeLeft--;
                     updateTimerText();
+                    int minutes = timeLeft / 60;
+                    int secs = timeLeft % 60;
+                    updateNotification(minutes, secs);
                     handler.postDelayed(this, 1000);
                 } else {
                     isRunning = false;
+                    notificationManager.cancel(1); // Timer bittiğinde bildirimi kapat
                 }
             }
         };
@@ -125,17 +139,42 @@ public class MainActivity extends AppCompatActivity {
             handler.removeCallbacks(runnable);
         }
         isRunning = false;
+        notificationManager.cancel(1); // Timer durduğunda bildirimi kapat
     }
 
     private void resetTimer(int seconds) {
         stopTimer();
         timeLeft = seconds;
         updateTimerText();
+        notificationManager.cancel(1); // Timer sıfırlandığında bildirimi kapat
     }
 
     private void updateTimerText() {
         int minutes = timeLeft / 60;
         int seconds = timeLeft % 60;
         timeText.setText(String.format("%02d:%02d", minutes, seconds));
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Pomodoro Timer Channel";
+            String description = "Channel for Pomodoro Timer notifications";
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel("pomodoro_timer_channel", name, importance);
+            channel.setDescription(description);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void updateNotification(int minutes, int seconds) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "pomodoro_timer_channel")
+                .setSmallIcon(R.drawable.ic_launcher_background) // Bildirim için özel simgeyi kullanıyoruz
+                .setContentTitle("Pomodoro Timer")
+                .setContentText(String.format("Time left: %02d:%02d", minutes, seconds))
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(true); // Bildirimi sabitle
+
+        notificationManager.notify(1, builder.build());
     }
 }
